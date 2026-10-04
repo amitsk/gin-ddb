@@ -1,4 +1,4 @@
-# fastify-ddb — Go / Gin port (spec stage)
+# gin-ddb — Go / Gin port (spec stage)
 
 Behavior-compatible port of the TypeScript `fastify-ddb` SkiLifts API:
 same routes, validation, error envelope, and DynamoDB access patterns,

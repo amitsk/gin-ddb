@@ -1,4 +1,4 @@
-# fastify-ddb (Go / Gin port) — specification
+# gin-ddb (Go / Gin port) — specification
 
 Date: 2026-10-04 · Status: **spec only, not implemented**
 Canonical contract anchor: `fastify-ddb` (TypeScript/Fastify) repo,

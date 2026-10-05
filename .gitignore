@@ -5,6 +5,9 @@
 *.exe
 *.test
 *.out
+/cdk/cdk
+/api
+/createtable
 # Go modules / coverage
 vendor/
 coverage.out

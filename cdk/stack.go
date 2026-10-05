@@ -27,18 +27,18 @@ var _ = assertions.Template_FromStack
 // when set in the synth environment — never baked in.
 func containerEnv(tableName, region string) *map[string]*string {
 	env := map[string]*string{
-		"PORT":                      jsii.String("3000"),
-		"HOST":                      jsii.String("0.0.0.0"),
-		"LOG_LEVEL":                 jsii.String("info"),
-		"CORS_ORIGIN":               jsii.String("*"),
-		"CORS_CREDENTIALS":          jsii.String("false"),
-		"RATE_LIMIT_MAX":            jsii.String("100"),
-		"RATE_LIMIT_TIME_WINDOW":    jsii.String("1 minute"),
-		"DYNAMODB_MODE":             jsii.String("aws"),
-		"DYNAMODB_TABLE_NAME":       jsii.String(tableName),
-		"DYNAMODB_LOCAL_REGION":     jsii.String("us-east-1"),
-		"AWS_REGION":                jsii.String(region),
-		"NODE_ENV":                  jsii.String("production"),
+		"PORT":                   jsii.String("3000"),
+		"HOST":                   jsii.String("0.0.0.0"),
+		"LOG_LEVEL":              jsii.String("info"),
+		"CORS_ORIGIN":            jsii.String("*"),
+		"CORS_CREDENTIALS":       jsii.String("false"),
+		"RATE_LIMIT_MAX":         jsii.String("100"),
+		"RATE_LIMIT_TIME_WINDOW": jsii.String("1 minute"),
+		"DYNAMODB_MODE":          jsii.String("aws"),
+		"DYNAMODB_TABLE_NAME":    jsii.String(tableName),
+		"DYNAMODB_LOCAL_REGION":  jsii.String("us-east-1"),
+		"AWS_REGION":             jsii.String(region),
+		"NODE_ENV":               jsii.String("production"),
 	}
 	if key, secret := os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"); key != "" && secret != "" {
 		env["AWS_ACCESS_KEY_ID"] = jsii.String(key)
@@ -110,10 +110,10 @@ func BuildResources(stack awscdk.Stack, vpc awsec2.IVpc, tableName string) {
 	})
 
 	svc := awsecs.NewFargateService(stack, jsii.String("Service"), &awsecs.FargateServiceProps{
-		Cluster:         cluster,
-		TaskDefinition:  taskDef,
-		DesiredCount:    jsii.Number(2),
-		AssignPublicIp:  jsii.Bool(false),
+		Cluster:        cluster,
+		TaskDefinition: taskDef,
+		DesiredCount:   jsii.Number(2),
+		AssignPublicIp: jsii.Bool(false),
 	})
 
 	alb := awselasticloadbalancingv2.NewApplicationLoadBalancer(stack, jsii.String("ALB"), &awselasticloadbalancingv2.ApplicationLoadBalancerProps{
@@ -126,10 +126,10 @@ func BuildResources(stack awscdk.Stack, vpc awsec2.IVpc, tableName string) {
 	listener.AddTargets(jsii.String("Api"), &awselasticloadbalancingv2.AddApplicationTargetsProps{
 		Port:     jsii.Number(3000),
 		Protocol: awselasticloadbalancingv2.ApplicationProtocol_HTTP,
-		Targets: &[]awselasticloadbalancingv2.IApplicationLoadBalancerTarget{svc},
+		Targets:  &[]awselasticloadbalancingv2.IApplicationLoadBalancerTarget{svc},
 		HealthCheck: &awselasticloadbalancingv2.HealthCheck{
-			Path:              jsii.String("/ready"),
-			HealthyHttpCodes:  jsii.String("200"),
+			Path:             jsii.String("/ready"),
+			HealthyHttpCodes: jsii.String("200"),
 		},
 	})
 

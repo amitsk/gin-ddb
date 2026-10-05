@@ -1,6 +1,6 @@
 # gin-ddb — SkiLifts API specification
 
-Date: 2026-10-04 (revised 2026-10-05) · Status: **spec only, not implemented**
+Date: 2026-10-04 (revised 2026-10-05) · Status: **implemented** (see README; acceptance in §16)
 
 This spec is self-contained. It defines the SkiLifts service from first
 principles. No external implementation is normative.

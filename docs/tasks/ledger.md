@@ -25,6 +25,19 @@
   `%2F`-encoded dates in `:metadata` must not split into segments; found
   via failing integration tests (GET/PUT dynamic → 404), fixed, green —
   cost if wrong: date routes 404 for every client.
+- Task 8: complete (180dda1+a3a1fd0, tests: createtable 2/2 + suite green;
+  live smoke vs real DynamoDB Local: 3 round trips 201/200, 409/400s with
+  details, 404s, PUT 200, DELETE 204, pagination + by-riders + headers OK)
+- Ruling: compose uses in-memory `-sharedDb` without `-dbPath` — file-backed
+  mode stalled forever (SQLite "unable to open database file"; only
+  storage-touching requests hung, curl probes passed) — tables recreated
+  via script; no persistence across restarts — cost if wrong: local data
+  loss on `compose down`, acceptable for dev.
+- Ruling: build image `golang:1.27-bookworm` (not 1.24) — go.mod requires
+  go >= 1.26.0 after dependency resolution — cost if wrong: docker build
+  breaks; revisit if CI pins older.
+- Ruling: table billing PAY_PER_REQUEST (no provisioned capacity to tune
+  for local) — production override goes to ADR in Task 10.
 - Ruling: CSP `default-src 'self'` on API routes only, `/docs` exempt
   (Swagger UI needs inline scripts) until §15 locks the CSP value —
   cost if wrong: docs UI breakage, recorded for Task 10 ADR.

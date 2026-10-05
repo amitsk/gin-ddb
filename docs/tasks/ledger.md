@@ -12,3 +12,4 @@
 - Ruling: pagination works on `map[string]string` raw key values, not SDK
   AttributeValues — keeps SDK types out of service/pagination layers;
   repository wraps to `{"S": …}` — cost if wrong: small translation code.
+- Task 2: complete (eb0d417+07977ba, tests: apperrors + pagination → ok; gin v1.12.0, uuid v1.6.0 pinned at floors)

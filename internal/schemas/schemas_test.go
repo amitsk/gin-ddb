@@ -9,6 +9,14 @@ import (
 	"gin-ddb/internal/models"
 )
 
+func queryOf(raw string) url.Values {
+	q, err := url.ParseQuery(raw)
+	if err != nil {
+		panic(err)
+	}
+	return q
+}
+
 func mustParseQuery(t *testing.T, raw string) url.Values {
 	t.Helper()
 	q, err := url.ParseQuery(raw)

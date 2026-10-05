@@ -108,10 +108,20 @@ type rateBucket struct {
 	start time.Time
 }
 
+// maxBuckets caps tracked IPs; beyond it, expired windows are swept.
+const maxBuckets = 10000
+
 // RateLimitMiddleware caps requests per IP per window. Disabled in test env.
 func RateLimitMiddleware(max int, window time.Duration, disabled bool) gin.HandlerFunc {
 	var mu sync.Mutex
 	buckets := map[string]*rateBucket{}
+	sweep := func(now time.Time) {
+		for ip, b := range buckets {
+			if now.Sub(b.start) >= 2*window {
+				delete(buckets, ip)
+			}
+		}
+	}
 	return func(c *gin.Context) {
 		if disabled {
 			c.Next()
@@ -122,6 +132,14 @@ func RateLimitMiddleware(max int, window time.Duration, disabled bool) gin.Handl
 		mu.Lock()
 		b, ok := buckets[ip]
 		if !ok || now.Sub(b.start) >= window {
+			if len(buckets) >= maxBuckets {
+				sweep(now)
+				if len(buckets) >= maxBuckets {
+					// Still full of live windows: reset rather than grow
+					// without bound (briefly lenient, never blocking).
+					clear(buckets)
+				}
+			}
 			b = &rateBucket{start: now}
 			buckets[ip] = b
 		}

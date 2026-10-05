@@ -6,6 +6,7 @@ package apperrors
 import (
 	"errors"
 	"net/http"
+	"reflect"
 
 	"github.com/aws/smithy-go"
 	"github.com/gin-gonic/gin"
@@ -46,13 +47,27 @@ func RequestID(c *gin.Context) string {
 }
 
 // Write renders the {error:{message,code,statusCode,details?}} envelope.
+// details is omitted when nil, including typed-nil slices and maps.
 func Write(c *gin.Context, code string, status int, message string, details any) {
 	c.Header(RequestIDHeader, RequestID(c))
 	payload := gin.H{"message": message, "code": code, "statusCode": status}
-	if details != nil {
+	if !isNil(details) {
 		payload["details"] = details
 	}
 	c.JSON(status, gin.H{"error": payload})
+}
+
+func isNil(v any) bool {
+	if v == nil {
+		return true
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Map, reflect.Ptr, reflect.Interface:
+		return rv.IsNil()
+	default:
+		return false
+	}
 }
 
 // Validation writes a 400 VALIDATION_ERROR with per-field details.

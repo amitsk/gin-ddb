@@ -5,6 +5,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -28,6 +29,9 @@ type Handler struct {
 	started time.Time
 }
 
+// maxBodyBytes caps JSON request bodies (larger → 413 REQUEST_ERROR).
+const maxBodyBytes = 1 << 20
+
 // New returns a Handler wired to svc and cfg (cfg supplies table/region
 // for GET / and rate-limit-unrelated route behavior).
 func New(svc *service.Service, cfg *config.Config) *Handler {
@@ -39,8 +43,19 @@ func writeServiceError(c *gin.Context, serr *service.Error) {
 }
 
 func readBody(c *gin.Context) ([]byte, bool) {
+	if ct := c.GetHeader("Content-Type"); ct != "" && !strings.Contains(ct, "application/json") {
+		apperrors.Write(c, apperrors.CodeRequestError,
+			http.StatusUnsupportedMediaType, "content type must be application/json", nil)
+		return nil, false
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBodyBytes)
 	raw, err := io.ReadAll(c.Request.Body)
 	if err != nil {
+		if strings.Contains(err.Error(), "request body too large") {
+			apperrors.Write(c, apperrors.CodeRequestError,
+				http.StatusRequestEntityTooLarge, "body too large", nil)
+			return nil, false
+		}
 		apperrors.Validation(c, "invalid request body",
 			[]apperrors.Detail{{Field: "body", Message: "invalid JSON"}})
 		return nil, false
@@ -246,7 +261,11 @@ func decodeToken(c *gin.Context, lq schemas.ListQuery) (map[string]string, bool)
 	return key, true
 }
 
-// metaKind classifies a :metadata path value.
+// datePattern mirrors the §6 dynamic-date rule for path classification.
+var datePattern = regexp.MustCompile(`^\d{2}\/\d{2}\/\d{2}$`)
+
+// metaKind classifies a :metadata path value. Dates must match the full
+// §6 pattern — slash shape alone (ab/cd/ef) is a 400, not a 404.
 func metaKind(meta string) (schemas.Kind, bool) {
 	switch meta {
 	case "static":
@@ -254,7 +273,7 @@ func metaKind(meta string) (schemas.Kind, bool) {
 	case "resort":
 		return schemas.KindResort, true
 	default:
-		if len(meta) == 8 && meta[2] == '/' && meta[5] == '/' {
+		if datePattern.MatchString(meta) {
 			return schemas.KindDynamic, true
 		}
 		return "", false

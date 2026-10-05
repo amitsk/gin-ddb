@@ -320,14 +320,20 @@ type ListQuery struct {
 func ParseListQuery(q url.Values) (ListQuery, []apperrors.Detail) {
 	lq := ListQuery{Limit: 20}
 	var details []apperrors.Detail
-	if raw := q.Get("limit"); raw != "" {
-		if !decimalPattern.MatchString(raw) {
+	if raw, present := q["limit"]; present {
+		v := ""
+		if len(raw) > 0 {
+			v = raw[0]
+		}
+		n, err := strconv.Atoi(v)
+		switch {
+		case v == "" || !decimalPattern.MatchString(v) || err != nil:
 			details = append(details, apperrors.Detail{Field: "limit", Message: "must be an integer > 0"})
-		} else if n, _ := strconv.Atoi(raw); n < 1 {
+		case n < 1:
 			details = append(details, apperrors.Detail{Field: "limit", Message: "must be > 0"})
-		} else if n > 100 {
+		case n > 100:
 			lq.Limit = 100
-		} else {
+		default:
 			lq.Limit = n
 		}
 	}
@@ -358,15 +364,19 @@ func ParseRidersQuery(q url.Values) (RidersQuery, []apperrors.Detail) {
 	lq, details := ParseListQuery(q)
 	rq := RidersQuery{ListQuery: lq}
 	for _, name := range []string{"minRiders", "maxRiders"} {
-		raw := q.Get(name)
-		if raw == "" {
+		vals, present := q[name]
+		if !present {
 			continue
 		}
-		if !decimalPattern.MatchString(raw) {
+		v := ""
+		if len(vals) > 0 {
+			v = vals[0]
+		}
+		n, err := strconv.Atoi(v)
+		if v == "" || !decimalPattern.MatchString(v) || err != nil {
 			details = append(details, apperrors.Detail{Field: name, Message: "must be an integer >= 0"})
 			continue
 		}
-		n, _ := strconv.Atoi(raw)
 		if name == "minRiders" {
 			rq.Min = &n
 		} else {

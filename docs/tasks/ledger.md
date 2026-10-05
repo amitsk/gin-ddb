@@ -45,12 +45,14 @@
   imports handlers, so an in-package test would cycle — cost if wrong: none.
 - Task 9: complete (6cf2100+088d8a8, tests: `go test ./...` in cdk/ → 4/4
   pass; awscdk/v2 v2.272.0 + constructs/v10 v10.8.1 pinned at floors)
-- Ruling: CDK service imports use the real nested paths (`awsec2`,
-  `awsdynamodb`, … — no underscores); each lives in the parent awscdk/v2
-  module, no extra requires — cost if wrong: none, builds green.
 - Ruling: 5xx alarm uses ALB `MetricHttpCodeTarget(TARGET_5XX_COUNT)` with
   Sum statistic on the metric (AlarmProps has no Statistic field);
   target-group protocol explicit HTTP for port 3000 — cost if wrong: synth
  -time panics, caught by template tests.
 - Ruling: removed accidentally committed `cdk/cdk` binary + extended
   .gitignore (binaries, cdk.out) — cost if wrong: none.
+- Ruling: CDK service imports use the real nested paths (`awsec2`,
+  `awsdynamodb`, … — no underscores); each lives in the parent awscdk/v2
+  module, no extra requires — cost if wrong: none, builds green.
+- Task 10: complete (e21b210, coverage 84.5% total incl. generated docs;
+  all suites green; floors re-verified; 4 ADRs + CI workflow added)

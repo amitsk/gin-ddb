@@ -5,6 +5,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -26,7 +27,6 @@ func (e *Error) Error() string { return e.Code + ": " + e.Message }
 // Page is one collection slice with its follow-up cursor.
 type Page struct {
 	Items            []map[string]any
-	NextToken        string
 	HasNext          bool
 	LastEvaluatedKey map[string]string
 	Count            int
@@ -34,11 +34,27 @@ type Page struct {
 
 // Service wires the repository to domain rules.
 type Service struct {
-	repo *repository.Repository
+	repo Store
 }
 
+// Store is the narrow table-I/O surface the service needs. The real
+// *repository.Repository satisfies it; tests may substitute fakes or
+// stubs without touching DynamoDB mapping code.
+type Store interface {
+	Create(ctx context.Context, record any) error
+	Get(ctx context.Context, lift, meta string) (map[string]any, error)
+	Update(ctx context.Context, lift, meta string, updates map[string]any) (map[string]any, error)
+	Delete(ctx context.Context, lift, meta string) error
+	Scan(ctx context.Context, limit int, start map[string]string) ([]map[string]any, map[string]string, error)
+	QueryByLift(ctx context.Context, lift string, limit int, start map[string]string) ([]map[string]any, map[string]string, error)
+	QueryByRiders(ctx context.Context, lift string, min, max *int, limit int, start map[string]string) ([]map[string]any, map[string]string, error)
+	Probe(ctx context.Context) error
+}
+
+var _ Store = (*repository.Repository)(nil)
+
 // New returns a Service over repo.
-func New(repo *repository.Repository) *Service { return &Service{repo: repo} }
+func New(repo Store) *Service { return &Service{repo: repo} }
 
 func fromRepo(err error, isCreate bool) *Error {
 	if errors.Is(err, repository.ErrNotFound) {
@@ -57,12 +73,27 @@ func fromRepo(err error, isCreate bool) *Error {
 	return &Error{Code: code, Status: status, Message: msg}
 }
 
+// storedForm renders the validated record as stored. Creates never
+// re-read: DynamoDB default reads are eventually consistent, so a Get
+// after Put can 404 a record that was just created.
+func storedForm(record any) (map[string]any, *Error) {
+	raw, err := json.Marshal(record)
+	if err != nil {
+		return nil, &Error{Code: apperrors.CodeInternalError, Status: http.StatusInternalServerError, Message: apperrors.InternalErrorMessage}
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, &Error{Code: apperrors.CodeInternalError, Status: http.StatusInternalServerError, Message: apperrors.InternalErrorMessage}
+	}
+	return out, nil
+}
+
 // CreateStatic creates a static record; existing → 409.
 func (s *Service) CreateStatic(ctx context.Context, rec models.StaticRecord) (map[string]any, *Error) {
 	if err := s.repo.Create(ctx, rec); err != nil {
 		return nil, fromRepo(err, true)
 	}
-	return s.Get(ctx, rec.Lift, rec.Metadata)
+	return storedForm(rec)
 }
 
 // CreateDynamic creates a dynamic record; existing → 409.
@@ -70,7 +101,7 @@ func (s *Service) CreateDynamic(ctx context.Context, rec models.DynamicRecord) (
 	if err := s.repo.Create(ctx, rec); err != nil {
 		return nil, fromRepo(err, true)
 	}
-	return s.Get(ctx, rec.Lift, rec.Metadata)
+	return storedForm(rec)
 }
 
 // CreateResort creates a resort record; existing → 409.
@@ -78,7 +109,7 @@ func (s *Service) CreateResort(ctx context.Context, rec models.ResortRecord) (ma
 	if err := s.repo.Create(ctx, rec); err != nil {
 		return nil, fromRepo(err, true)
 	}
-	return s.Get(ctx, rec.Lift, rec.Metadata)
+	return storedForm(rec)
 }
 
 // Get fetches one item; absent → 404.

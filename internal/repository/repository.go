@@ -63,15 +63,24 @@ func keyAV(lift, meta string) map[string]types.AttributeValue {
 	}
 }
 
+// numericKeyAttrs are DynamoDB Number members in cursors (the GSI sort
+// key). Everything else round-trips as String.
+var numericKeyAttrs = map[string]bool{"TotalUniqueLiftRiders": true}
+
 // StringKey converts SDK key attributes to raw values for pagination.
+// Number members encode as decimal strings; unknown binary/set members
+// are dropped (this table uses S/N keys only).
 func StringKey(lek map[string]types.AttributeValue) map[string]string {
 	if len(lek) == 0 {
 		return nil
 	}
 	out := make(map[string]string, len(lek))
 	for k, v := range lek {
-		if s, ok := v.(*types.AttributeValueMemberS); ok {
-			out[k] = s.Value
+		switch t := v.(type) {
+		case *types.AttributeValueMemberS:
+			out[k] = t.Value
+		case *types.AttributeValueMemberN:
+			out[k] = t.Value
 		}
 	}
 	return out
@@ -84,7 +93,11 @@ func avKey(key map[string]string) map[string]types.AttributeValue {
 	}
 	out := make(map[string]types.AttributeValue, len(key))
 	for k, v := range key {
-		out[k] = &types.AttributeValueMemberS{Value: v}
+		if numericKeyAttrs[k] {
+			out[k] = &types.AttributeValueMemberN{Value: v}
+		} else {
+			out[k] = &types.AttributeValueMemberS{Value: v}
+		}
 	}
 	return out
 }

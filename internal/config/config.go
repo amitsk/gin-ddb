@@ -94,8 +94,8 @@ func loadEnv(get func(string) string) (*Config, error) {
 	rateWindow := time.Minute
 	if v := strings.TrimSpace(get("RATE_LIMIT_TIME_WINDOW")); v != "" {
 		d, err := parseWindow(v)
-		if err != nil {
-			fail("RATE_LIMIT_TIME_WINDOW: must be a duration like \"1 minute\" or \"1m\"")
+		if err != nil || d <= 0 {
+			fail("RATE_LIMIT_TIME_WINDOW: must be a positive duration like \"1 minute\" or \"1m\"")
 		} else {
 			rateWindow = d
 		}

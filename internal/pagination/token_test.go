@@ -61,8 +61,8 @@ func TestMalformedTokens(t *testing.T) {
 	for _, token := range []string{
 		"",
 		"!!!not-base64!!!",
-		"e30",       // {} — valid base64url, not an object of strings... (empty object: rejected, no keys)
-		"W10=",      // "[]" with padding
+		"e30",         // {} — valid base64url, not an object of strings... (empty object: rejected, no keys)
+		"W10=",        // "[]" with padding
 		"bm90LWpzb24", // "not-json"
 	} {
 		if _, err := Decode(token); err == nil {

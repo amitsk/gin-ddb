@@ -19,7 +19,7 @@ Build the Go/Gin SkiLifts CRUD service per `docs/specs/2026-10-04-gin-port-spec.
 | Module | Floor | Notes |
 |---|---|---|
 | `github.com/gin-gonic/gin` | `v1.12.0` | HTTP framework |
-| `github.com/go-playground/validator/v10` | `v10.30.5` | only where regexes don't rule |
+| `github.com/go-playground/validator/v10` | — (unused: spec §2 allows explicit checks; all rules are regex/range checks) | only where regexes don't rule |
 | `github.com/aws/aws-sdk-go-v2/config` | `v1.33.6` | default config/region chain |
 | `github.com/aws/aws-sdk-go-v2/credentials` | `v1.20.6` | static dummy creds (local) |
 | `github.com/aws/aws-sdk-go-v2/service/dynamodb` | `v1.70.0` | table I/O |

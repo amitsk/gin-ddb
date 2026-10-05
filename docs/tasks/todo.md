@@ -23,7 +23,7 @@
 - [ ] `NODE_ENV=test` flag exposed for rate-limit bypass
 - [ ] `go.mod` pins every plan.md floor module at floor or newer; `go.sum` complete
 **Verification:**
-- [ ] `go get github.com/gin-gonic/gin@latest github.com/go-playground/validator/v10@latest github.com/aws/aws-sdk-go-v2/config@latest github.com/aws/aws-sdk-go-v2/credentials@latest github.com/aws/aws-sdk-go-v2/service/dynamodb@latest github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue@latest github.com/swaggo/swag@latest github.com/swaggo/gin-swagger@latest github.com/swaggo/files@latest github.com/google/uuid@latest` then `go mod tidy` clean
+- [ ] `go get github.com/gin-gonic/gin@latest github.com/aws/aws-sdk-go-v2/config@latest github.com/aws/aws-sdk-go-v2/credentials@latest github.com/aws/aws-sdk-go-v2/service/dynamodb@latest github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue@latest github.com/swaggo/files@latest github.com/swaggo/gin-swagger@latest github.com/google/uuid@latest` then `go mod tidy` clean (validator intentionally unused — explicit checks per spec §2)
 - [ ] `go list -m all` output recorded in the task/commit message; no module below its floor
 - [ ] Tests pass: `go test ./internal/config/...`
 - [ ] Build succeeds: `go build ./...`

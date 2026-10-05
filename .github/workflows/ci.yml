@@ -1,0 +1,37 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - run: test -z "$(gofmt -l .)"
+        working-directory: .
+      - run: go vet ./...
+      - run: go build ./...
+      - run: go test ./... --cover
+      - name: coverage gate (80%+, generated docs excluded)
+        run: |
+          go test -coverprofile=cover.out ./... > /dev/null
+          total=$(go tool cover -func=cover.out | grep -v 'internal/docs' | awk '/total:/ {gsub(/%/, "", $3); print $3}')
+          echo "coverage (excl. generated): ${total}%"
+          awk "BEGIN {exit !($total >= 80)}"
+
+  cdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: test -z "$(gofmt -l .)" && go vet ./... && go build ./... && go test ./...
+        working-directory: cdk

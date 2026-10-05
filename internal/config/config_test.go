@@ -125,6 +125,37 @@ func TestDynamoModeValidation(t *testing.T) {
 	}
 }
 
+func TestRateLimitWindowParsing(t *testing.T) {
+	setEnv(t, "RATE_LIMIT_TIME_WINDOW", "2 minutes")
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() = %v, want nil", err)
+	}
+	if cfg.RateLimitWindow != 2*time.Minute {
+		t.Errorf("RateLimitWindow = %v, want 2m", cfg.RateLimitWindow)
+	}
+	setEnv(t, "RATE_LIMIT_TIME_WINDOW", "90s")
+	cfg, err = Load()
+	if err != nil || cfg.RateLimitWindow != 90*time.Second {
+		t.Errorf("Load() 90s = %+v, %v; want 90s", cfg, err)
+	}
+	setEnv(t, "RATE_LIMIT_TIME_WINDOW", "bogus")
+	if _, err := Load(); err == nil {
+		t.Error("Load() with bogus window = nil, want error")
+	}
+}
+
+func TestAddr(t *testing.T) {
+	clearEnv(t, "HOST", "PORT")
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() = %v, want nil", err)
+	}
+	if cfg.Addr() != "0.0.0.0:3000" {
+		t.Errorf("Addr() = %q, want 0.0.0.0:3000", cfg.Addr())
+	}
+}
+
 func contains(s, sub string) bool {
 	return len(s) >= len(sub) && (func() bool {
 		for i := 0; i+len(sub) <= len(s); i++ {

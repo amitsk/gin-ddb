@@ -145,3 +145,35 @@ func TestListByRiders(t *testing.T) {
 		t.Fatalf("bounded = %+v, %+v; want 1 item", page, serr)
 	}
 }
+
+func resortRec() models.ResortRecord {
+	return models.ResortRecord{
+		Lift: "Summit Resort", Metadata: "resort",
+		TotalRiders: 8500, TotalSnow: 42,
+		AvalancheDanger: "Moderate",
+		OpenLifts:       []int{1, 2, 3},
+	}
+}
+
+func TestCreateResortRoundTripAndConflict(t *testing.T) {
+	s := testService()
+	ctx := context.Background()
+	created, serr := s.CreateResort(ctx, resortRec())
+	if serr != nil {
+		t.Fatalf("CreateResort() = %+v, want nil", serr)
+	}
+	if created["TotalRiders"] == nil || created["OpenLifts"] == nil {
+		t.Errorf("created = %v, want resort fields", created)
+	}
+	if _, serr := s.CreateResort(ctx, resortRec()); serr == nil ||
+		serr.Code != apperrors.CodeConflict || serr.Status != http.StatusConflict {
+		t.Errorf("second CreateResort() = %+v, want (CONFLICT,409)", serr)
+	}
+}
+
+func TestServiceErrorString(t *testing.T) {
+	serr := &Error{Code: apperrors.CodeNotFound, Status: 404, Message: "item not found"}
+	if got := serr.Error(); got != "NOT_FOUND: item not found" {
+		t.Errorf("Error() = %q, want code-prefixed message", got)
+	}
+}

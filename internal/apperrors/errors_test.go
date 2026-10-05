@@ -136,3 +136,18 @@ func TestMapDynamoDBGeneric(t *testing.T) {
 		t.Errorf("generic failure = (%s,%d), want (DYNAMODB_ERROR,500)", code, status)
 	}
 }
+
+func TestValidationHelper(t *testing.T) {
+	c, w := testContext()
+	Validation(c, "invalid query", []Detail{{Field: "limit", Message: "must be > 0"}})
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", w.Code)
+	}
+	if got := decodeEnvelope(t, w)["code"]; got != CodeValidationError {
+		t.Errorf("code = %v, want VALIDATION_ERROR", got)
+	}
+	if w.Header().Get("x-request-id") == "" {
+		t.Error("x-request-id missing")
+	}
+}

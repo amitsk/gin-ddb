@@ -12,9 +12,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "gin-ddb/internal/docs" // generated OpenAPI spec served at /docs
 	"gin-ddb/internal/apperrors"
 	"gin-ddb/internal/config"
+	_ "gin-ddb/internal/docs" // generated OpenAPI spec served at /docs
 	"gin-ddb/internal/models"
 	"gin-ddb/internal/pagination"
 	"gin-ddb/internal/schemas"

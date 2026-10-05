@@ -18,3 +18,4 @@
   integer-range, enum, or structural check implemented explicitly, which
   spec §2 permits ("or explicit checks where regexes rule"); plan floor
   table updated to mark it unused — cost if wrong: none, zero imports.
+- Task 4: complete (b9ecc20+483d03e, tests: `go test ./internal/repository/...` → 11/11 pass; attributevalue v1.21.8 pinned at floor)

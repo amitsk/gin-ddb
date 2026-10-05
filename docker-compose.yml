@@ -1,0 +1,35 @@
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:3.3.0
+    # In-memory shared DB: no persistence across restarts (tables are
+    # recreated via `go run ./scripts/createtable`). Avoids sqlite dbPath
+    # permission stalls observed with file-backed mode in this image.
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8000/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+    environment:
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      DYNAMODB_TABLE_NAME: SkiLifts
+      DYNAMODB_LOCAL_ENDPOINT: http://dynamodb-local:8000
+      DYNAMODB_LOCAL_REGION: us-east-1
+      AWS_REGION: us-east-1
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5

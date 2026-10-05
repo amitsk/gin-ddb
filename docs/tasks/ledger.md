@@ -20,3 +20,13 @@
   table updated to mark it unused — cost if wrong: none, zero imports.
 - Task 4: complete (b9ecc20+483d03e, tests: `go test ./internal/repository/...` → 11/11 pass; attributevalue v1.21.8 pinned at floor)
 - Task 5: complete (036f725, tests: `go test ./internal/service/...` → 8/8 pass)
+- Task 6+7: complete (4dd2113, tests: server 6/6 + integration 18/18 pass, full suite green)
+- Ruling: `UseRawPath=true` + `UnescapePathValues=true` on the engine —
+  `%2F`-encoded dates in `:metadata` must not split into segments; found
+  via failing integration tests (GET/PUT dynamic → 404), fixed, green —
+  cost if wrong: date routes 404 for every client.
+- Ruling: CSP `default-src 'self'` on API routes only, `/docs` exempt
+  (Swagger UI needs inline scripts) until §15 locks the CSP value —
+  cost if wrong: docs UI breakage, recorded for Task 10 ADR.
+- Ruling: integration test is `package handlers_test` (external) — server
+  imports handlers, so an in-package test would cycle — cost if wrong: none.

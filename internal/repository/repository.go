@@ -24,7 +24,7 @@ import (
 var ErrNotFound = errors.New("repository: item not found")
 
 const (
-	existsCondition   = "attribute_exists(Lift) AND attribute_exists(Metadata)"
+	existsCondition    = "attribute_exists(Lift) AND attribute_exists(Metadata)"
 	notExistsCondition = "attribute_not_exists(Lift) AND attribute_not_exists(Metadata)"
 )
 
@@ -239,13 +239,13 @@ func (r *Repository) QueryByRiders(ctx context.Context, lift string, min, max *i
 		vals[":max"] = &types.AttributeValueMemberN{Value: strconv.Itoa(*max)}
 	}
 	out, err := r.client.Query(ctx, &dynamodb.QueryInput{
-		TableName:              aws.String(r.table),
-		IndexName:              aws.String(dbpkg.GSIFullName),
-		KeyConditionExpression: aws.String(keyCond),
+		TableName:                 aws.String(r.table),
+		IndexName:                 aws.String(dbpkg.GSIFullName),
+		KeyConditionExpression:    aws.String(keyCond),
 		ExpressionAttributeValues: vals,
-		ScanIndexForward:       aws.Bool(false),
-		Limit:                  aws.Int32(int32(limit)),
-		ExclusiveStartKey:      avKey(start),
+		ScanIndexForward:          aws.Bool(false),
+		Limit:                     aws.Int32(int32(limit)),
+		ExclusiveStartKey:         avKey(start),
 	})
 	if err != nil {
 		return nil, nil, err
